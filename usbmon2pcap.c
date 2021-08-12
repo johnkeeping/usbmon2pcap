@@ -164,7 +164,7 @@ static void convert_one_event(const char *line)
 		*data++ = (hex2val(line[0]) << 4) | hex2val(line[1]);
 
 		line += 2;
-		if (*line == ' ')
+		if (*line == ' ' || *line == '\r')
 			line++;
 
 		pkthdr.caplen++;
