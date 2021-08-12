@@ -27,7 +27,7 @@ void die_pcap(pcap_t *pcap)
 	exit(1);
 }
 
-char hex2val(char c)
+unsigned hex2val(char c)
 {
 	if ('0' <= c && c <= '9')
 		return c - '0';
@@ -36,7 +36,9 @@ char hex2val(char c)
 	if ('A' <= c && c <= 'F')
 		return 10 + c - 'A';
 
-	errx(1, "invalid hex character: %c", c);
+	warnx("invalid hex character: %c (0x%02x)",
+	      (c >= ' ' && c < 0x7f) ? c : '?', c);
+	return -1;
 }
 
 // This is largely taken from libpcap's usb_read_linux() function.
@@ -161,7 +163,13 @@ static void convert_one_event(const char *line)
 	hdr->data_flag = 0;
 
 	while (line[0] && line[1] && pkthdr.caplen < snaplen) {
-		*data++ = (hex2val(line[0]) << 4) | hex2val(line[1]);
+		unsigned val;
+
+		val = (hex2val(line[0]) << 4) | hex2val(line[1]);
+		if (val > 0xff)
+			break;
+
+		*data++ = val;
 
 		line += 2;
 		if (*line == ' ' || *line == '\r')
